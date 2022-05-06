@@ -10,6 +10,7 @@ import {jest} from '@jest/globals';
 import {makePromiseInspectable, flushAllTimersAndMicrotasks} from '../../test-utils.js';
 import {createMockContext} from '../../fraggle-rock/gather/mock-driver.js';
 import TraceGatherer from '../../../gather/gatherers/trace.js';
+import TraceProcessor from '../../../lib/tracehouse/trace-processor.js';
 
 jest.useFakeTimers();
 
@@ -51,14 +52,12 @@ describe('TraceGatherer', () => {
       expect(categories).toContain('othercategory'); // additional
     });
 
-    it('should add a clock sync marker in timespan mode', async () => {
+    it('should add a performance measure in timespan mode', async () => {
       context.gatherMode = 'timespan';
-      context.driver.defaultSession.sendCommand.mockResponse('Tracing.recordClockSyncMarker');
 
       await gatherer.startSensitiveInstrumentation(context.asContext());
-      expect(context.driver.defaultSession.sendCommand).toHaveBeenCalledWith(
-        'Tracing.recordClockSyncMarker',
-        expect.anything()
+      expect(context.driver.executionContext.evaluate).toHaveBeenCalledWith(
+        expect.any(Function), {args: [TraceProcessor.TIMESPAN_MARKER_ID]}
       );
     });
   });
